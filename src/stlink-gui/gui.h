@@ -60,18 +60,24 @@ struct _STlinkGUI {
     GtkEntry       *devmem_jmp_entry;
     GtkBox         *filemem_box;
     GtkEntry       *filemem_jmp_entry;
+    GtkToolButton  *open_button;
     GtkToolButton  *connect_button;
     GtkToolButton  *disconnect_button;
     GtkToolButton  *flash_button;
-    GtkToolButton  *export_button;
-    GtkToolButton  *open_button;
     GtkToolButton  *reset_button;
+    GtkToolButton  *export_button;
+    GtkToolButton  *erase_button;
 
-    /* flash dialog */
+    /* Flash dialog */
     GtkDialog  *flash_dialog;
     GtkButton  *flash_dialog_ok;
     GtkButton  *flash_dialog_cancel;
     GtkEntry   *flash_dialog_entry;
+
+    /* Erase dialog */
+    GtkDialog  *erase_dialog;
+    GtkButton  *erase_dialog_ok;
+    GtkButton  *erase_dialog_cancel;
 
     struct progress_t progress;
     struct mem_t flash_mem;

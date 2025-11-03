@@ -101,6 +101,8 @@ static void stlink_gui_set_sensitivity(STlinkGUI *gui, gboolean sensitivity) {
     gtk_widget_set_sensitive(GTK_WIDGET(gui->reset_button), sensitivity && (gui->sl != NULL));
 
     gtk_widget_set_sensitive(GTK_WIDGET(gui->export_button), sensitivity && (gui->sl != NULL));
+
+    gtk_widget_set_sensitive(GTK_WIDGET(gui->erase_button), sensitivity && (gui->sl != NULL));
 }
 
 static void mem_view_init_headers(GtkTreeView *view) {
@@ -531,11 +533,12 @@ static void stlink_gui_set_disconnected(STlinkGUI *gui) {
     gtk_statusbar_push(gui->statusbar, gtk_statusbar_get_context_id(gui->statusbar, "conn"), "Disconnected");
 
     gtk_widget_set_sensitive(GTK_WIDGET(gui->device_frame), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(gui->flash_button), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(gui->export_button), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(gui->disconnect_button), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(gui->connect_button), TRUE);
+    gtk_widget_set_sensitive(GTK_WIDGET(gui->disconnect_button), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(gui->flash_button), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(gui->reset_button), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(gui->export_button), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(gui->erase_button), FALSE);
 }
 
 static void disconnect_button_cb(GtkWidget *widget, gpointer data) {
@@ -614,7 +617,7 @@ static void open_button_cb(GtkWidget *widget, gpointer data) {
     stlink_gui_open_file(gui);
 }
 
-static gboolean stlink_gui_write_flash_update(STlinkGUI *gui) {
+static gboolean stlink_gui_restore_after_background_thread(STlinkGUI *gui) {
     stlink_gui_set_sensitivity(gui, TRUE);
     gui->progress.activity_mode = FALSE;
     gtk_widget_hide(GTK_WIDGET(gui->progress.bar));
@@ -634,7 +637,7 @@ static gpointer stlink_gui_write_flash(gpointer data) {
         stlink_gui_set_info_error_message(gui, "Failed to write to flash");
     }
 
-    g_idle_add((GSourceFunc)stlink_gui_write_flash_update, gui);
+    g_idle_add((GSourceFunc)stlink_gui_restore_after_background_thread, gui);
     return (NULL);
 }
 
@@ -736,6 +739,42 @@ static void export_button_cb(GtkWidget *widget, gpointer data) {
     }
 
     gtk_widget_destroy(dialog);
+}
+
+static gpointer stlink_gui_erase_flash(gpointer data) {
+    g_return_val_if_fail(STLINK_IS_GUI(data), NULL);
+    STlinkGUI *gui = STLINK_GUI(data);
+
+    g_return_val_if_fail((gui->sl != NULL), NULL);
+
+    if(stlink_erase_flash_mass(gui->sl) < 0) {
+        stlink_gui_set_info_error_message(gui, "Failed to mass erase flash");
+    } else {
+        stlink_gui_set_info_error_message(gui, "Mass erased flash");
+    }
+
+    g_idle_add((GSourceFunc)stlink_gui_restore_after_background_thread, gui);
+    return (NULL);
+}
+
+static void erase_button_cb(GtkWidget *widget, gpointer data) {
+    (void)widget;
+    STlinkGUI *gui;
+    gint result;
+
+    gui = STLINK_GUI(data);
+    g_return_if_fail(gui->sl != NULL);
+
+    result = gtk_dialog_run(gui->erase_dialog);
+
+    if(result == GTK_RESPONSE_OK) {
+        stlink_gui_set_sensitivity(gui, FALSE);
+        gtk_progress_bar_set_text(gui->progress.bar, "Mass erasing flash");
+        gui->progress.activity_mode = TRUE;
+        gtk_widget_show(GTK_WIDGET(gui->progress.bar));
+
+        g_thread_new("erase_flash", (GThreadFunc)stlink_gui_erase_flash, gui);
+    }
 }
 
 static gboolean progress_pulse_timeout(STlinkGUI *gui) {
@@ -872,6 +911,9 @@ static void stlink_gui_build_ui(STlinkGUI *gui) {
     gui->export_button = GTK_TOOL_BUTTON(gtk_builder_get_object(builder, "export_button"));
     g_signal_connect(G_OBJECT(gui->export_button), "clicked", G_CALLBACK(export_button_cb), gui);
 
+    gui->erase_button = GTK_TOOL_BUTTON(gtk_builder_get_object(builder, "erase_button"));
+    g_signal_connect(G_OBJECT(gui->erase_button), "clicked", G_CALLBACK(erase_button_cb), gui);
+
     gui->devmem_treeview = GTK_TREE_VIEW(gtk_builder_get_object(builder, "devmem_treeview"));
     mem_view_init_headers(gui->devmem_treeview);
     devmem_store = gtk_list_store_new(5,
@@ -932,6 +974,12 @@ static void stlink_gui_build_ui(STlinkGUI *gui) {
     gui->flash_dialog_cancel = GTK_BUTTON(gtk_builder_get_object(builder, "flash_dialog_cancel_button"));
     gui->flash_dialog_entry = GTK_ENTRY(gtk_builder_get_object(builder, "flash_dialog_entry"));
 
+    /* Erase dialog */
+    gui->erase_dialog = GTK_DIALOG(gtk_builder_get_object(builder, "erase_dialog"));
+    g_signal_connect_swapped(gui->erase_dialog, "response", G_CALLBACK(gtk_widget_hide), gui->erase_dialog);
+    gui->erase_dialog_ok = GTK_BUTTON(gtk_builder_get_object(builder, "erase_dialog_ok_button"));
+    gui->erase_dialog_cancel = GTK_BUTTON(gtk_builder_get_object(builder, "erase_dialog_cancel_button"));
+
     // make it so
     gtk_widget_show_all(GTK_WIDGET(gui->window));
     gtk_widget_hide(GTK_WIDGET(gui->infobar));
@@ -964,7 +1012,7 @@ int32_t main(int32_t argc, char **argv) {
         }
         if(argc == 1 && g_file_test(*argv, G_FILE_TEST_IS_REGULAR)){
             /* Open hex file at app startup */
-            gui->filename = g_strdup(*argv);    
+            gui->filename = g_strdup(*argv);
             g_idle_add((GSourceFunc)open_file_from_args, gui);
         }
         argc--;
