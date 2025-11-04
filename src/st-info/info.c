@@ -24,6 +24,7 @@ static void usage(void) {
     puts("st-info --sram  [--connect-under-reset] [--hot-plug] [--freq=<kHz>]");
     puts("st-info --chipid  [--connect-under-reset] [--hot-plug] [--freq=<kHz>]");
     puts("st-info --descr  [--connect-under-reset] [--hot-plug] [--freq=<kHz>]");
+    puts("st-info --voltage  [--connect-under-reset] [--hot-plug] [--freq=<kHz>]");
 }
 
 static void stlink_print_version(stlink_t *sl) {
@@ -49,6 +50,17 @@ static void stlink_print_info(stlink_t *sl) {
 
     params = stlink_chipid_get_params(sl->chip_id);
     if(params) { printf("  dev-type:   %s\n", params->dev_type); }
+
+    // Print target voltage if supported
+    int32_t voltage_mv = -1;
+    if(sl->version.stlink_v != 1) {
+        voltage_mv = stlink_target_voltage(sl);
+    }
+    if(voltage_mv >= 0) {
+        printf("  voltage:    %d mV\n", voltage_mv);
+    } else {
+        printf("  voltage:    n/a\n");
+    }
 }
 
 static void stlink_probe(enum connect_type connect, int32_t freq) {
@@ -127,6 +139,21 @@ static int32_t print_data(int32_t ac, char **av) {
         if(params == NULL) { return (-1); }
 
         printf("%s\n", params->dev_type);
+    } else if(strcmp(av[1], "--voltage") == 0) {
+        int32_t voltage_mv = -1;
+        if(sl->version.stlink_v != 1) {
+            voltage_mv = stlink_target_voltage(sl);
+        }
+        if(voltage_mv >= 0) {
+            printf("%d\n", voltage_mv);
+        } else {
+            fprintf(stderr, "Failed to read target voltage\n");
+            if(sl) {
+                stlink_exit_debug_mode(sl);
+                stlink_close(sl);
+            }
+            return (-1);
+        }
     }
 
     if(sl) {
