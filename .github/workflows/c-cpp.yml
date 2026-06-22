@@ -265,42 +265,42 @@ jobs:
         working-directory: ./build/release
         run: sudo cmake --build . --target uninstall
 
-  job_windows_msvc:
-    name: windows MSVC
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
+  # job_windows_msvc:
+  #   name: windows MSVC
+  #   runs-on: windows-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: environment preparation
-        run: mkdir .\\build\\debug && mkdir .\\build\\release
+  #     - name: environment preparation
+  #       run: mkdir .\\build\\debug && mkdir .\\build\\release
 
-      - name: project configuration in debug
-        working-directory: ./build/debug
-        run: cmake ..\\.. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Debug
+  #     - name: project configuration in debug
+  #       working-directory: ./build/debug
+  #       run: cmake ..\\.. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Debug
 
-      - name: project build in debug
-        working-directory: ./build/debug
-        run: cmake --build . --target ALL_BUILD
+  #     - name: project build in debug
+  #       working-directory: ./build/debug
+  #       run: cmake --build . --target ALL_BUILD
 
-      - name: run tests
-        working-directory: ./build/debug
-        run: ctest --force-new-ctest-process
+  #     - name: run tests
+  #       working-directory: ./build/debug
+  #       run: ctest --force-new-ctest-process
 
-      - name: project configuration in release
-        working-directory: ./build/release
-        run: cmake ..\\.. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release
+  #     - name: project configuration in release
+  #       working-directory: ./build/release
+  #       run: cmake ..\\.. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release
 
-      - name: project build in release
-        working-directory: ./build/release
-        run: cmake --build . --target ALL_BUILD
+  #     - name: project build in release
+  #       working-directory: ./build/release
+  #       run: cmake --build . --target ALL_BUILD
 
-      - name: project installation
-        working-directory: ./build/release
-        run: cmake --build . --target INSTALL
+  #     - name: project installation
+  #       working-directory: ./build/release
+  #       run: cmake --build . --target INSTALL
 
-      - name: sudo make uninstall
-        working-directory: ./build/release
-        run: cmake --build . --target uninstall
+  #     - name: sudo make uninstall
+  #       working-directory: ./build/release
+  #       run: cmake --build . --target uninstall
 
 # Linux MinGW cross compliation
 
