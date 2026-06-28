@@ -1,6 +1,6 @@
 # Compiling from sources
 
-## Microsoft Windows - MSVC (11)
+## Microsoft Windows - MSVC
 
 ### Common Requirements
 
@@ -55,7 +55,7 @@ Install the following packages from your package repository:
 - `rpm` (on Debian based distros (Debian, Ubuntu), needed for package build with `make package`)
 - `libusb-1.0-0`
 - `libusb-1.0-0-dev` (development headers for building)
-- `libgtk-3-dev` (_optional_, needed for `stlink-gui`)
+- `libgtk-4-dev` (_optional_, needed for `stlink-gui`)
 - `pandoc` (_optional_, needed for generating manpages from markdown)
 
 or execute (Debian-based systems only): `apt-get install gcc build-essential cmake rpm libusb-1.0-0 libusb-1.0-0-dev libgtk-4-dev pandoc`

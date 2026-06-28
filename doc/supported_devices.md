@@ -36,7 +36,7 @@ More commonly these are:
 | STM32WB        | M4F             |                                                            |
 | STM32WL        | M4              |                                                            |
 | STM32L5        | M33             | *preliminary, limited and partial support only!*           |
-| STM32H5        | M33             | *preliminary, limited and partial support only!*           |
+| STM32H5        | M33             |                                                            |
 | STM32U5        | M33             | *preliminary, limited and partial support only!*           |
 
 

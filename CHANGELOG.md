@@ -2,7 +2,7 @@
 
 # v1.8.1
 
-Release date: 2025-xx-xx
+Release date: 2026-xx-xx
 
 This release drops support for some older operating systems. Check project README for details.
 
@@ -15,6 +15,7 @@ Updated system requirements:
 Features:
 
 - Show all info during full erase ([#1363](https://github.com/stlink-org/stlink/pull/1363), commit [#6a6718b](https://github.com/stlink-org/stlink/commit/6a6718b3342b6c5e282a4e33325b9f97908a0692))
+- Support for STM32H5 series (erase, read and write) ([#1384](https://github.com/stlink-org/stlink/pull/13824), [#1407](https://github.com/stlink-org/stlink/pull/1407), [#1492](https://github.com/stlink-org/stlink/pull/1492))
 - Added support for STLINK-V3PWR ([#1388](https://github.com/stlink-org/stlink/pull/1388), [#1389](https://github.com/stlink-org/stlink/pull/1389))
 - Dynamic SRAM size for F4 memory map ([#1390](https://github.com/stlink-org/stlink/pull/1390))
 - Modifications to allow building of toolset in OpenBSD ([#1392](https://github.com/stlink-org/stlink/pull/1392))
@@ -28,9 +29,12 @@ Features:
 - [STM32L4Q5CG]: Added support for device ([#1438](https://github.com/stlink-org/stlink/pull/1438), [#1439](https://github.com/stlink-org/stlink/pull/1439))
 - Corrected and unified GitHub-Actions C/C++ CI workflow ([#1446](https://github.com/stlink-org/stlink/pull/1446), [#1449](https://github.com/stlink-org/stlink/pull/1449))
 - Make SYS_OPEN in semihosting recognize ":tt" ([#1447](https://github.com/stlink-org/stlink/pull/1447))
+- [feature] Implementation of flash erase in stlink-gui ([#1452](https://github.com/stlink-org/stlink/pull/1452), [#1486](https://github.com/stlink-org/stlink/pull/1486))
 - [STM32G4]: Erase pages on flash bank 2 ([#1456](https://github.com/stlink-org/stlink/pull/1456), [#1457](https://github.com/stlink-org/stlink/pull/1457))
 - STM32 flash type implementation for WB05, WB06/07, WB09, WL3x ([#1466](https://github.com/stlink-org/stlink/pull/1466))
-  
+- Make st-info --probe run probes in parallel ([#1483](https://github.com/stlink-org/stlink/pull/1483))
+- Added voltage printout and query for st-info ([#1487](https://github.com/stlink-org/stlink/pull/1487))
+
 Updates & changes:
 
 - [stlink-lib] Clarified warning message for data alignment ([#1371](https://github.com/stlink-org/stlink/pull/1371), commit [#40ee5f4](https://github.com/stlink-org/stlink/commit/40ee5f4bd1151cec65f291f0166429b061c6e5c0))
@@ -61,6 +65,9 @@ Fixes:
 - st-util cannot parse -V and -F options and --freq option results in a segmentation fault ([#1428](https://github.com/stlink-org/stlink/pull/1428), [#1429](https://github.com/stlink-org/stlink/pull/1429))
 - st-util: $--freq parameter case sensitive in 1.8.0 but not on previous versions ([#1445](https://github.com/stlink-org/stlink/pull/1445), commit [#7900006](https://github.com/stlink-org/stlink/commit/7900006619ce22cb900151120f9aeebe022cd3ec))
 - [STM32F205]: st-flash broken due to introduced bug in stlink-lib/usb.c ([#1451](https://github.com/stlink-org/stlink/pull/1451), commit [#9446bf5](https://github.com/stlink-org/stlink/commit/9446bf570d23f2c1329abd313ae81197b4df4210))
+- Compilation: Multiple 64 bit to 32 bit narrowing problems in source code ([#1463](https://github.com/stlink-org/stlink/pull/1463), commit [#54d6de5](https://github.com/stlink-org/stlink/commit/54d6de5ae20cbdec1da49ab97c05406612276ebb))
+- Fixed STLINK-V3 programmer lock up when no target connected ([#1467](https://github.com/stlink-org/stlink/pull/1467), commit [#1894b70](https://github.com/stlink-org/stlink/commit/1894b700dee05a031958371ff593bf53d30a93ca))
+- Fixed Win32 gettimeofday implementation ([#1468](https://github.com/stlink-org/stlink/pull/1468), commit [#db953ea](https://github.com/stlink-org/stlink/commit/db953eaf0b7b49e84ee3c556e3e4b974b3ebbb38))
 
 
 # v1.8.0
