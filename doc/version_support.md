@@ -8,8 +8,7 @@ Up on compiling c-make will **automatically** download and install the latest co
 
 ### Apple macOS:
 
-- 13 [Ventura]
-- 14 [Sonoma]
+- macOS 14 [Sonoma]
 
 ### Linux-/Unix-based:
 

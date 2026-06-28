@@ -252,8 +252,8 @@ void init_chipids(char *dir_to_scan) {
   HANDLE hFind = INVALID_HANDLE_VALUE;
   WIN32_FIND_DATAA ffd;
   char filepath[MAX_PATH] = {0};
-  DWORD filepathlen;
-  int numslash;
+  int32_t filepathlen;
+
   StringCchCopyA(filepath, STLINK_ARRAY_SIZE(filepath), dir_to_scan);
 
   if(FAILED(

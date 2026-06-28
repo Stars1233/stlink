@@ -146,13 +146,6 @@ jobs:
             cxx: clang++
             packages: ""
 
-          # macOS LTS (Ventura 13.x)
-          - name: macOS-ventura clang14
-            os: macos-13
-            cc: clang
-            cxx: clang++
-            packages: ""
-
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
     env:
@@ -211,41 +204,53 @@ jobs:
         working-directory: ./build/release
         run: sudo cmake --build . --target uninstall
 
-  # # Windows builds with MSVC
-  # windows_build:
-  #   name: Windows MSVC
-  #   runs-on: windows-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
+  # Windows builds with MSVC
+  windows_build:
+    name: Windows MSVC
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - name: Configure project (Release)
-  #       run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+      # Install Visual Studio 2022 Build Tools
+      - name: Install Visual Studio 2022 Build Tools
+        run: |
+          choco install visualstudio2022buildtools -y --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
 
-  #     - name: Build project (Release)
-  #       run: cmake --build build --config Release --parallel 4
+      - name: Configure project (Release)
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
 
-  #     - name: Run tests (Release)
-  #       working-directory: build
-  #       run: ctest --output-on-failure --parallel 4
+      - name: Build project (Release)
+        run: cmake --build build --config Release --parallel 4
 
-  # # Cross-compilation for MinGW (Windows)
-  # mingw_cross_compile:
-  #   name: MinGW Cross-Compilation (Windows)
-  #   runs-on: ubuntu-24.04
-  #   steps:
-  #     - uses: actions/checkout@v4
+      - name: Run tests (Release)
+        working-directory: build
+        run: ctest --output-on-failure --parallel 4
 
-  #     - name: Install MinGW dependencies
-  #       run: sudo apt-get install gcc-mingw-w64 libusb-1.0.0-dev libgtk-4-dev
+  # Cross-compilation for MinGW (Windows)
+  mingw_cross_compile:
+    name: MinGW Cross-Compilation (Windows)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - name: Cross-compile for Windows (x86-64)
-  #       run: |
-  #         mkdir -p build-mingw
-  #         cd build-mingw
-  #         cmake \
-  #           -DCMAKE_SYSTEM_NAME=Windows \
-  #           -DTOOLCHAIN_PREFIX=x86_64-w64-mingw32 \
-  #           -DCMAKE_TOOLCHAIN_FILE=../cmake/modules/set_toolchain.cmake \
-  #           -DCMAKE_INSTALL_PREFIX=$PWD/install ..
-  #         make
-  #         rm -rf build-mingw
+      - name: Install MinGW toolchain and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64 libusb-1.0-0-dev mingw-w64
+
+      - name: Cross-compile for Windows (x86-64)
+        run: |
+          mkdir -p build-mingw
+          cd build-mingw
+          cmake \
+            -DCMAKE_SYSTEM_NAME=Windows \
+            -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
+            -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
+            -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres \
+            -DCMAKE_FIND_ROOT_PATH=/usr/x86_64-w64-mingw32 \
+            -DLIBUSB_INCLUDE_DIR=/usr/include/libusb-1.0 \
+            -DLIBUSB_LIBRARY=/usr/lib/x86_64-linux-gnu/libusb-1.0.a \
+            -DSTLINK_GENERATE_GUI=OFF \
+            ..
+          make
+          rm -rf build-mingw

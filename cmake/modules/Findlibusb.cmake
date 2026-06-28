@@ -51,11 +51,12 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
         HINTS /usr/local
     )
 
-# Windows, MSVC, or MinGW on Debian
-elseif(WIN32 OR MSVC OR (MINGW AND EXISTS "/etc/debian_version"))
+# Windows, MSVC, or MinGW (including Cross-Compiling from Linux/macOS)
+elseif(WIN32 OR MSVC OR MINGW)
     # Fix for ssize_t on Windows
     add_compile_definitions(_SSIZE_T_DEFINED ssize_t=int64_t)
 
+    # 1. Try to find an already installed local Windows version of libusb
     find_path(LIBUSB_INCLUDE_DIR
         NAMES libusb.h
         HINTS "C:/Program Files/libusb-1.0/include" "C:/Program Files (x86)/libusb-1.0/include"
@@ -63,23 +64,40 @@ elseif(WIN32 OR MSVC OR (MINGW AND EXISTS "/etc/debian_version"))
     )
 
     find_library(LIBUSB_LIBRARY
-        NAMES usb-1.0
+        NAMES usb-1.0 libusb-1.0
         HINTS "C:/Program Files/libusb-1.0" "C:/Program Files (x86)/libusb-1.0"
     )
 
+    # 2. If found locally, set status variables
+    if(LIBUSB_INCLUDE_DIR AND LIBUSB_LIBRARY)
+        set(LIBUSB_FOUND TRUE)
+        set(LIBUSB_INCLUDE_DIRS ${LIBUSB_INCLUDE_DIR})
+        set(LIBUSB_LIBRARIES ${LIBUSB_LIBRARY})
+    endif()
+
+    # 3. If NOT found (Cross-Compiling host), fetch source and build inline
     if(NOT LIBUSB_FOUND)
-        message(STATUS "libusb-1.0 not found. Downloading and building from source...")
+        message(STATUS "libusb-1.0 not found locally. Downloading and building from source via FetchContent...")
+
+        include(FetchContent)
 
         FetchContent_Declare(
             libusb
-            GIT_REPOSITORY https://github.com/libusb/libusb-cmake
-            GIT_TAG v1.0.30-0
+            GIT_REPOSITORY "https://github.com/libusb/libusb-cmake.git"
+            GIT_TAG "v1.0.30-0"
         )
         FetchContent_MakeAvailable(libusb)
 
-        # Update variables for consistency
+        # Fix: FetchContent clones the official libusb repo layout.
+        # The main header "libusb.h" resides directly inside the "libusb" subfolder of the source directory.
         set(LIBUSB_INCLUDE_DIR "${libusb_SOURCE_DIR}/libusb")
-        set(LIBUSB_LIBRARY "libusb")
+        set(LIBUSB_INCLUDE_DIRS "${libusb_SOURCE_DIR}/libusb")
+
+        # Fix: Route the linker path to the freshly generated library target
+        set(LIBUSB_LIBRARY "libusb-1.0")
+        set(LIBUSB_LIBRARIES "libusb-1.0")
+        
+        set(LIBUSB_FOUND TRUE)
     endif()
 
 # All other Unix-based systems (Linux, macOS, etc.)
