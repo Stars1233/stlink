@@ -315,7 +315,13 @@ uint32_t is_flash_busy(stlink_t *sl) {
 }
 
 void wait_flash_busy(stlink_t *sl) {
-  // TODO: add some delays here
+
+  #ifdef _WIN32
+        Sleep(100);
+  #else
+        usleep(100000);
+  #endif
+
   while (is_flash_busy(sl))
     ;
 }

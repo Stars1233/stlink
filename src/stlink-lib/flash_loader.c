@@ -12,8 +12,8 @@
   */
 
 #include "flash_loader.h"
-#include "common_flash.h"
 
+#include "common_flash.h"
 #include "helper.h"
 #include "logging.h"
 #include "read_write.h"
@@ -726,10 +726,17 @@ int32_t stlink_flashloader_start(stlink_t *sl, flash_loader_t *fl) {
              sl->flash_type == STM32_FLASH_TYPE_G4 ||
              sl->flash_type == STM32_FLASH_TYPE_L5_U5 ||
              sl->flash_type == STM32_FLASH_TYPE_C0) {
-    ILOG("Starting Flash write for WB/G0/G4/L5/U5/C0\n");
+    ILOG("Starting Flash write for WB/WL/G0/G4/L5/U5/C0\n");
 
     unlock_flash_if(sl);         // unlock flash if necessary
     set_flash_cr_pg(sl, BANK_1); // set PG 'allow programming' bit
+
+    #ifdef _WIN32
+      Sleep(100);
+    #else
+      usleep(100000);
+    #endif
+
   } else if(sl->flash_type == STM32_FLASH_TYPE_L0_L1) {
     ILOG("Starting Flash write for L0\n");
 
